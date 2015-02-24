@@ -44,7 +44,7 @@ except:
     sys.stderr.write("Unable to load template filer\r\n")
     sys.exit(C2M_ERR_LOAD_TEMPLATE)
     
-proj_folder = sys.argv[1]
+proj_folder = os.path.abspath(sys.argv[1])
 if not os.path.isdir(proj_folder):
     sys.stderr.write("STM32CubeMX \"Toolchain Folder Location\" %s not found\r\n" % proj_folder)
     sys.exit(C2M_ERR_INVALID_COMMANDLINE)
@@ -67,6 +67,7 @@ nodes = root.findall('linkedResources/link[type=\'1\']/locationURI')
 sources = []
 for node in nodes:
     sources.append(re.sub(r'^PARENT-2-PROJECT_LOC/', '', node.text))
+sources=list(set(sources))
 sources.sort()
 c_sources = 'C_SOURCES ='
 asm_sources = 'ASM_SOURCES ='
