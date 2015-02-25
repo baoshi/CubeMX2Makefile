@@ -35,14 +35,23 @@ if len(sys.argv) != 2:
     sys.stderr.write("  CubeMX2Makefile.py <STM32CubeMX \"Toolchain Folder Location\">\r\n")
     sys.exit(C2M_ERR_INVALID_COMMANDLINE)
 
+# Load template files
 app_folder = os.path.dirname(os.path.abspath(sys.argv[0]))
 try:
     fd = open(app_folder + os.path.sep + 'CubeMX2Makefile.tpl', 'rb')
     mft = Template(fd.read())
     fd.close()
 except:
-    sys.stderr.write("Unable to load template filer\r\n")
+    sys.stderr.write("Unable to load template file CubeMX2Makefile.tpl\r\n")
     sys.exit(C2M_ERR_LOAD_TEMPLATE)
+    
+try:
+    fd = open(app_folder + os.path.sep + 'CubeMX2LD.tpl', 'rb')
+    ldt = Template(fd.read())
+    fd.close()
+except:
+    sys.stderr.write("Unable to load template file CubeMX2LD.tpl\r\n")
+    sys.exit(C2M_ERR_LOAD_TEMPLATE)    
     
 proj_folder = os.path.abspath(sys.argv[1])
 if not os.path.isdir(proj_folder):
@@ -144,27 +153,39 @@ for node in nodes:
         c_defs += ' -D' + value
 
 # Link script
-ld_script = 'LD_SCRIPT ='
+memory = ''
+estack = ''
 node = root.find('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.ld"]/option[@superClass="com.atollic.truestudio.ld.general.scriptfile"]')
 try:
     value = node.attrib.get('value')
-    ld_script += ' ' + os.path.basename(value)
-    shutil.copy(proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + os.path.basename(value), proj_folder + os.path.sep)
+    ld_script = proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + os.path.basename(value)
+    fd = open(ld_script, 'r')
+    ls = fd.read()
+    fd.close()
+    p = re.compile(ur'MEMORY(\n|\r\n|\r)?{(\n|\r\n|\r)?(.*?)(\n|\r\n|\r)?}', re.DOTALL | re.IGNORECASE)
+    m = re.search(p, ls)                       
+    if m:
+        memory = m.group(3)
+    p = re.compile(ur'(_estack.*)')
+    m = re.search(p, ls)
+    if m:
+        estack = m.group(1)
 except Exception, e:
-    sys.stderr.write("Unable to find or copy link script from TrueSTUDIO project file\r\n")
+    sys.stderr.write("Unable to find or read link script from TrueSTUDIO project file\r\n")
     sys.exit(C2M_ERR_IO)
+if ((memory =='') | (estack == '')):
+    sys.stderr.write("Unable to locate memory layout from link script\r\n")
+    sys.exit(C2M_ERR_NEED_UPDATE)
 
 mf = mft.substitute( \
-	TARGET = proj_name, \
+    TARGET = proj_name, \
     MCU = mcu, \
-	C_SOURCES = c_sources, \
-	ASM_SOURCES = asm_sources, \
-	AS_DEFS = as_defs, \
-	AS_INCLUDES = as_includes, \
+    C_SOURCES = c_sources, \
+    ASM_SOURCES = asm_sources, \
+    AS_DEFS = as_defs, \
+    AS_INCLUDES = as_includes, \
     C_DEFS = c_defs, \
-	C_INCLUDES = c_includes, \
-    LD_SCRIPT = ld_script)
-
+    C_INCLUDES = c_includes)
 try:
     fd = open(proj_folder + os.path.sep + 'Makefile', 'wb')
     fd.write(mf)
@@ -172,7 +193,19 @@ try:
 except:
     sys.stderr.write("Write Makefile failed\r\n")
     sys.exit(C2M_ERR_IO)
-    
 sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'Makefile'))
+    
+ld = ldt.substitute( \
+    MEMORY = memory, \
+    ESTACK = estack)
+try:
+    fd = open(proj_folder + os.path.sep + 'arm-gcc-link.ld', 'wb')
+    fd.write(ld)
+    fd.close()
+except:
+    sys.stderr.write("Write link script failed\r\n")
+    sys.exit(C2M_ERR_IO)    
+sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'arm-gcc-link.ld'))    
+
 sys.exit(C2M_ERR_SUCCESS)
 

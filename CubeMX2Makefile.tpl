@@ -61,11 +61,11 @@ CFLAGS += -MD -MP -MF .dep/$$(@F).d
 # LDFLAGS
 #######################################
 # link script
-$LD_SCRIPT
+LDSCRIPT = arm-gcc-link.ld
 # libraries
 LIBS = -lc -lm -lnosys
 LIBDIR =
-LDFLAGS = $MCU -specs=nano.specs -T$$(LD_SCRIPT) $$(LIBDIR) $$(LIBS) -Wl,-Map=$$(BUILD_DIR)/$$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $MCU -specs=nano.specs -T$$(LDSCRIPT) $$(LIBDIR) $$(LIBS) -Wl,-Map=$$(BUILD_DIR)/$$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: $$(BUILD_DIR)/$$(TARGET).elf $$(BUILD_DIR)/$$(TARGET).hex
