@@ -44,15 +44,15 @@ try:
 except:
     sys.stderr.write("Unable to load template file CubeMX2Makefile.tpl\r\n")
     sys.exit(C2M_ERR_LOAD_TEMPLATE)
-    
+
 try:
     fd = open(app_folder + os.path.sep + 'CubeMX2LD.tpl', 'rb')
     ldt = Template(fd.read())
     fd.close()
 except:
     sys.stderr.write("Unable to load template file CubeMX2LD.tpl\r\n")
-    sys.exit(C2M_ERR_LOAD_TEMPLATE)    
-    
+    sys.exit(C2M_ERR_LOAD_TEMPLATE)
+
 proj_folder = os.path.abspath(sys.argv[1])
 if not os.path.isdir(proj_folder):
     sys.stderr.write("STM32CubeMX \"Toolchain Folder Location\" %s not found\r\n" % proj_folder)
@@ -65,12 +65,12 @@ if not (os.path.isfile(ts_project) and os.path.isfile(ts_cproject)):
     sys.stderr.write("TrueSTUDIO project not found, use STM32CubeMX to generate a TrueSTUDIO project first\r\n")
     sys.exit(C2M_ERR_NO_PROJECT)
 
-# .project file    
-try:  
-    tree = ET.parse(ts_project)  
-    root = tree.getroot()  
-except Exception, e:  
-    sys.stderr.write("Error: cannot parse TrueSTUDIO .project file: %s\r\n" % ts_project)  
+# .project file
+try:
+    tree = ET.parse(ts_project)
+    root = tree.getroot()
+except Exception, e:
+    sys.stderr.write("Error: cannot parse TrueSTUDIO .project file: %s\r\n" % ts_project)
     sys.exit(C2M_ERR_PROJECT_FILE)
 nodes = root.findall('linkedResources/link[type=\'1\']/locationURI')
 sources = []
@@ -83,7 +83,7 @@ asm_sources = 'ASM_SOURCES ='
 for source in sources:
     ext = os.path.splitext(source)[1]
     if ext == '.c':
-        c_sources += ' \\\n  ' + source 
+        c_sources += ' \\\n  ' + source
     elif ext == '.s':
         asm_sources = asm_sources + ' \\\n  ' + source
     else:
@@ -95,7 +95,7 @@ try:
     tree = ET.parse(ts_cproject)
     root = tree.getroot()
 except Exception, e:
-    sys.stderr.write("Error: cannot prase TrueSTUDIO .cproject file: %s\r\n" % ts_cproject)
+    sys.stderr.write("Error: cannot parse TrueSTUDIO .cproject file: %s\r\n" % ts_cproject)
     sys.exit(C2M_ERR_PROJECT_FILE)
 # MCU
 mcu = ''
@@ -118,7 +118,7 @@ first = 1
 for node in nodes:
     value = node.attrib.get('value')
     if (value != ""):
-        value = re.sub(r'^..(\\|/)..(\\|/)..(\\|/)', '', value)
+        value = re.sub(r'^..(\\|/)..(\\|/)..(\\|/)', '', value.replace('\\', os.path.sep))
         if first:
             as_includes = 'AS_INCLUDES = -I' + value
             first = 0
@@ -138,7 +138,7 @@ first = 1
 for node in nodes:
     value = node.attrib.get('value')
     if (value != ""):
-        value = re.sub(r'^..(\\|/)..(\\|/)..(\\|/)', '', value)
+        value = re.sub(r'^..(\\|/)..(\\|/)..(\\|/)', '', value.replace('\\', os.path.sep))
         if first:
             c_includes = 'C_INCLUDES = -I' + value
             first = 0
@@ -158,12 +158,12 @@ estack = ''
 node = root.find('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.ld"]/option[@superClass="com.atollic.truestudio.ld.general.scriptfile"]')
 try:
     value = node.attrib.get('value')
-    ld_script = proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + os.path.basename(value)
+    ld_script = proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + os.path.basename(value.replace('\\', os.path.sep))
     fd = open(ld_script, 'r')
     ls = fd.read()
     fd.close()
     p = re.compile(ur'MEMORY(\n|\r\n|\r)?{(\n|\r\n|\r)?(.*?)(\n|\r\n|\r)?}', re.DOTALL | re.IGNORECASE)
-    m = re.search(p, ls)                       
+    m = re.search(p, ls)
     if m:
         memory = m.group(3)
     p = re.compile(ur'(_estack.*)')
@@ -194,7 +194,7 @@ except:
     sys.stderr.write("Write Makefile failed\r\n")
     sys.exit(C2M_ERR_IO)
 sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'Makefile'))
-    
+
 ld = ldt.substitute( \
     MEMORY = memory, \
     ESTACK = estack)
@@ -204,8 +204,7 @@ try:
     fd.close()
 except:
     sys.stderr.write("Write link script failed\r\n")
-    sys.exit(C2M_ERR_IO)    
-sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'arm-gcc-link.ld'))    
+    sys.exit(C2M_ERR_IO)
+sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'arm-gcc-link.ld'))
 
 sys.exit(C2M_ERR_SUCCESS)
-
