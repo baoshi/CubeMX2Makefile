@@ -150,7 +150,7 @@ nodes = root.findall('.//tool[@superClass="com.atollic.truestudio.exe.debug.tool
 for node in nodes:
     value = node.attrib.get('value')
     if (value != ""):
-        c_defs += ' -D' + value
+        c_defs += ' -D' + re.sub(r'([()])', r'\\\1', value)
 
 # Link script
 memory = ''
