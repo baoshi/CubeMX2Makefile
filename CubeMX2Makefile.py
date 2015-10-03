@@ -26,12 +26,12 @@ mcu_cflags[re.compile('STM32(F|L)4')] = '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d
 mcu_cflags[re.compile('STM32(F|L)7')] = '-mthumb -mcpu=cortex-m7 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp'
 
 if len(sys.argv) != 2:
-    sys.stderr.write("\r\nSTM32CubeMX project to Makefile V1.0\r\n")
+    sys.stderr.write("\r\nSTM32CubeMX project to Makefile V1.5\r\n")
     sys.stderr.write("-==================================-\r\n")
-    sys.stderr.write("Written by Baoshi <mail\x40ba0sh1.com> on 2015-02-22\r\n")
+    sys.stderr.write("Written by Baoshi <mail\x40ba0sh1.com> on 2015-10-03\r\n")
     sys.stderr.write("Copyright www.ba0sh1.com\r\n")
     sys.stderr.write("Apache License 2.0 <http://www.apache.org/licenses/LICENSE-2.0>\r\n")
-    sys.stderr.write("For STM32CubeMX Version 4.6.0 http://www.st.com/stm32cube\r\n")
+    sys.stderr.write("Updated for STM32CubeMX Version 4.10.1 http://www.st.com/stm32cube\r\n")
     sys.stderr.write("Usage:\r\n")
     sys.stderr.write("  CubeMX2Makefile.py <STM32CubeMX \"Toolchain Folder Location\">\r\n")
     sys.exit(C2M_ERR_INVALID_COMMANDLINE)
@@ -46,34 +46,26 @@ except:
     sys.stderr.write("Unable to load template file CubeMX2Makefile.tpl\r\n")
     sys.exit(C2M_ERR_LOAD_TEMPLATE)
 
-try:
-    fd = open(app_folder + os.path.sep + 'CubeMX2LD.tpl', 'rb')
-    ldt = Template(fd.read())
-    fd.close()
-except:
-    sys.stderr.write("Unable to load template file CubeMX2LD.tpl\r\n")
-    sys.exit(C2M_ERR_LOAD_TEMPLATE)
-
 proj_folder = os.path.abspath(sys.argv[1])
 if not os.path.isdir(proj_folder):
     sys.stderr.write("STM32CubeMX \"Toolchain Folder Location\" %s not found\r\n" % proj_folder)
     sys.exit(C2M_ERR_INVALID_COMMANDLINE)
 
 proj_name = os.path.splitext(os.path.basename(proj_folder))[0]
-ts_project = proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + '.project'
-ts_cproject = proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + '.cproject'
-if not (os.path.isfile(ts_project) and os.path.isfile(ts_cproject)):
-    sys.stderr.write("TrueSTUDIO project not found, use STM32CubeMX to generate a TrueSTUDIO project first\r\n")
+ac6_project = proj_folder + os.path.sep + 'SW4STM32' + os.path.sep + proj_name + ' Configuration' + os.path.sep + '.project'
+ac6_cproject = proj_folder + os.path.sep + 'SW4STM32' + os.path.sep + proj_name + ' Configuration' + os.path.sep + '.cproject'
+if not (os.path.isfile(ac6_project) and os.path.isfile(ac6_cproject)):
+    sys.stderr.write("SW4STM32 project not found, use STM32CubeMX to generate a SW4STM32 project first\r\n")
     sys.exit(C2M_ERR_NO_PROJECT)
 
 # .project file
 try:
-    tree = ET.parse(ts_project)
+    tree = ET.parse(ac6_project)
     root = tree.getroot()
 except Exception, e:
-    sys.stderr.write("Error: cannot parse TrueSTUDIO .project file: %s\r\n" % ts_project)
+    sys.stderr.write("Error: cannot parse SW4STM32 .project file: %s\r\n" % ac6_project)
     sys.exit(C2M_ERR_PROJECT_FILE)
-nodes = root.findall('linkedResources/link[type=\'1\']/locationURI')
+nodes = root.findall('linkedResources/link[type=\'1\']/location')
 sources = []
 for node in nodes:
     sources.append(re.sub(r'^PARENT-2-PROJECT_LOC/', '', node.text))
@@ -93,15 +85,15 @@ for source in sources:
 
 # .cproject file
 try:
-    tree = ET.parse(ts_cproject)
+    tree = ET.parse(ac6_cproject)
     root = tree.getroot()
 except Exception, e:
-    sys.stderr.write("Error: cannot parse TrueSTUDIO .cproject file: %s\r\n" % ts_cproject)
+    sys.stderr.write("Error: cannot parse SW4STM32 .cproject file: %s\r\n" % ac6_cproject)
     sys.exit(C2M_ERR_PROJECT_FILE)
 # MCU
 mcu = ''
 ld_mcu = ''
-node = root.find('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.as"]/option[@name="Microcontroller"]')
+node = root.find('.//toolChain[@superClass="fr.ac6.managedbuild.toolchain.gnu.cross.exe.debug"]/option[@name="Mcu"]')
 try:
     value = node.attrib.get('value')
 except Exception, e:
@@ -119,7 +111,7 @@ if (mcu == '' or ld_mcu == ''):
     sys.stderr.exit(C2M_ERR_NEED_UPDATE)
 # AS include
 as_includes = 'AS_INCLUDES ='
-nodes = root.findall('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.as"]/option[@valueType="includePath"]/listOptionValue')
+nodes = root.findall('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.assembler"]/option[@valueType="includePath"]/listOptionValue')
 first = 1
 for node in nodes:
     value = node.attrib.get('value')
@@ -132,14 +124,9 @@ for node in nodes:
             as_includes += '\nAS_INCLUDES += -I' + value
 # AS symbols
 as_defs = 'AS_DEFS ='
-nodes = root.findall('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.as"]/option[@valueType="definedSymbols"]/listOptionValue')
-for node in nodes:
-    value = node.attrib.get('value')
-    if (value != ""):
-        as_defs += ' -D' + value
 # C include
 c_includes = 'C_INCLUDES ='
-nodes = root.findall('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.gcc"]/option[@valueType="includePath"]/listOptionValue')
+nodes = root.findall('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler"]/option[@valueType="includePath"]/listOptionValue')
 first = 1
 for node in nodes:
     value = node.attrib.get('value')
@@ -152,36 +139,27 @@ for node in nodes:
             c_includes += '\nC_INCLUDES += -I' + value
 # C symbols
 c_defs = 'C_DEFS ='
-nodes = root.findall('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.gcc"]/option[@valueType="definedSymbols"]/listOptionValue')
+nodes = root.findall('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler"]/option[@valueType="definedSymbols"]/listOptionValue')
 for node in nodes:
     value = node.attrib.get('value')
     if (value != ""):
         c_defs += ' -D' + re.sub(r'([()])', r'\\\1', value)
 
 # Link script
-memory = ''
-estack = ''
-node = root.find('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.ld"]/option[@superClass="com.atollic.truestudio.ld.general.scriptfile"]')
+ldscript = 'LDSCRIPT = ' 
+node = root.find('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker"]/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
 try:
     value = node.attrib.get('value')
-    ld_script = proj_folder + os.path.sep + 'TrueSTUDIO' + os.path.sep + proj_name + ' Configuration' + os.path.sep + os.path.basename(value.replace('\\', os.path.sep))
-    fd = open(ld_script, 'r')
-    ls = fd.read()
-    fd.close()
-    p = re.compile(ur'MEMORY(\n|\r\n|\r)?{(\n|\r\n|\r)?(.*?)(\n|\r\n|\r)?}', re.DOTALL | re.IGNORECASE)
-    m = re.search(p, ls)
-    if m:
-        memory = m.group(3)
-    p = re.compile(ur'(_estack.*)')
-    m = re.search(p, ls)
-    if m:
-        estack = m.group(1)
+    value = os.path.basename(value)
 except Exception, e:
-    sys.stderr.write("Unable to find or read link script from TrueSTUDIO project file\r\n")
-    sys.exit(C2M_ERR_IO)
-if ((memory =='') | (estack == '')):
-    sys.stderr.write("Unable to locate memory layout from link script\r\n")
-    sys.exit(C2M_ERR_NEED_UPDATE)
+    sys.stderr.write("No link script defined\r\n")
+    sys.exit(C2M_ERR_PROJECT_FILE) 
+# copy link script to top level so that user can discard SW4STM32 folder
+src = proj_folder + os.path.sep + 'SW4STM32' + os.path.sep + proj_name + ' Configuration' + os.path.sep + value
+dst = proj_folder + os.path.sep + value
+shutil.copyfile(src, dst)
+sys.stdout.write("File created: %s\r\n" % dst)
+ldscript += value  
 
 mf = mft.substitute( \
     TARGET = proj_name, \
@@ -192,7 +170,8 @@ mf = mft.substitute( \
     AS_DEFS = as_defs, \
     AS_INCLUDES = as_includes, \
     C_DEFS = c_defs, \
-    C_INCLUDES = c_includes)
+    C_INCLUDES = c_includes, \
+    LDSCRIPT = ldscript)
 try:
     fd = open(proj_folder + os.path.sep + 'Makefile', 'wb')
     fd.write(mf)
@@ -201,17 +180,5 @@ except:
     sys.stderr.write("Write Makefile failed\r\n")
     sys.exit(C2M_ERR_IO)
 sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'Makefile'))
-
-ld = ldt.substitute( \
-    MEMORY = memory, \
-    ESTACK = estack)
-try:
-    fd = open(proj_folder + os.path.sep + 'arm-gcc-link.ld', 'wb')
-    fd.write(ld)
-    fd.close()
-except:
-    sys.stderr.write("Write link script failed\r\n")
-    sys.exit(C2M_ERR_IO)
-sys.stdout.write("File created: %s\r\n" % (proj_folder + os.path.sep + 'arm-gcc-link.ld'))
 
 sys.exit(C2M_ERR_SUCCESS)

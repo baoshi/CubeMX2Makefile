@@ -61,7 +61,7 @@ CFLAGS += -MD -MP -MF .dep/$$(@F).d
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = arm-gcc-link.ld
+$LDSCRIPT
 # libraries
 LIBS = -lc -lm -lnosys
 LIBDIR =

@@ -1,0 +1,6 @@
+2015-02-22: V1.0
+Initial release, based on STM32CubeMX 4.6.0
+
+2015-10-03: V1.5
+Updated with STM32CubeMX 4.10.1
+Use SW4STM32 instead of TrueStudio
