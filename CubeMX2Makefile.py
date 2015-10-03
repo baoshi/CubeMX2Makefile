@@ -23,6 +23,7 @@ mcu_cflags[re.compile('STM32(F|L)1')] = '-mthumb -mcpu=cortex-m3'
 mcu_cflags[re.compile('STM32(F|L)2')] = '-mthumb -mcpu=cortex-m3'
 mcu_cflags[re.compile('STM32(F|L)3')] = '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp'
 mcu_cflags[re.compile('STM32(F|L)4')] = '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp'
+mcu_cflags[re.compile('STM32(F|L)7')] = '-mthumb -mcpu=cortex-m7 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp'
 
 if len(sys.argv) != 2:
     sys.stderr.write("\r\nSTM32CubeMX project to Makefile V1.0\r\n")
@@ -99,6 +100,7 @@ except Exception, e:
     sys.exit(C2M_ERR_PROJECT_FILE)
 # MCU
 mcu = ''
+ld_mcu = ''
 node = root.find('.//tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.as"]/option[@name="Microcontroller"]')
 try:
     value = node.attrib.get('value')
@@ -108,7 +110,11 @@ except Exception, e:
 for pattern, option in mcu_cflags.items():
     if pattern.match(value):
         mcu = option
-if (mcu == ''):
+ld_mcu = mcu
+# special case for M7, needs to be linked as M4
+if ('m7' in ld_mcu):
+    ld_mcu = mcu_cflags[re.compile('STM32(F|L)4')]
+if (mcu == '' or ld_mcu == ''):
     sys.stderr.write("Unknown MCU\r\n, please contact author for an update of this utility\r\n")
     sys.stderr.exit(C2M_ERR_NEED_UPDATE)
 # AS include
@@ -180,6 +186,7 @@ if ((memory =='') | (estack == '')):
 mf = mft.substitute( \
     TARGET = proj_name, \
     MCU = mcu, \
+    LDMCU = ld_mcu, \
     C_SOURCES = c_sources, \
     ASM_SOURCES = asm_sources, \
     AS_DEFS = as_defs, \
