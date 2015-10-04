@@ -150,6 +150,7 @@ ldscript = 'LDSCRIPT = '
 node = root.find('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker"]/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
 try:
     value = node.attrib.get('value')
+    value = re.sub(r'^..(\\|/)..(\\|/)..(\\|/)', '', value.replace('\\', os.path.sep))
     value = os.path.basename(value)
 except Exception, e:
     sys.stderr.write("No link script defined\r\n")
