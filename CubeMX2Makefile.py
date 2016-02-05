@@ -168,7 +168,7 @@ def main():
 
     # Copy link script to top level so that user can discard SW4STM32 folder
     src_path = os.path.join(proj_folder_path, 'SW4STM32', '{} Configuration'.format(proj_name), ld_script_name)
-    dst_path = os.path.join(proj_folder_path, mcu_str)
+    dst_path = os.path.join(proj_folder_path, ld_script_name)
     shutil.copyfile(src_path, dst_path)
     sys.stdout.write("File created: {}\n".format(dst_path))
 
