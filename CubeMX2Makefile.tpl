@@ -18,7 +18,6 @@ OPT = -O0
 #######################################
 # pathes
 #######################################
-# source path
 # Build path
 BUILD_DIR = build
 
@@ -109,5 +108,7 @@ clean:
 # dependencies
 #######################################
 -include $$(shell mkdir .dep 2>/dev/null) $$(wildcard .dep/*)
+
+.PHONY: clean all
 
 # *** EOF ***

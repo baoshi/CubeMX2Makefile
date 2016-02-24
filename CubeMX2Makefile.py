@@ -30,13 +30,13 @@ mcu_regex_to_cflags_dict = {
 
 def main():
     if len(sys.argv) != 2:
-        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.5\n")
+        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.6\n")
         sys.stderr.write("-==================================-\n")
-        sys.stderr.write("Written by Baoshi <mail\x40ba0sh1.com> on 2015-10-03\n")
-        sys.stderr.write("Copyright www.ba0sh1.com\n")
+        sys.stderr.write("Written by Baoshi <mail\x40ba0sh1.com> on 2015-02-22\n")
+        sys.stderr.write("Updated 2015-02-24 for STM32CubeMX 4.13.0 http://www.st.com/stm32cube\n")
+        sys.stderr.write("Refer to history.txt for contributors, thanks!\n")
         sys.stderr.write("Apache License 2.0 <http://www.apache.org/licenses/LICENSE-2.0>\n")
-        sys.stderr.write("Updated for STM32CubeMX Version 4.10.1 http://www.st.com/stm32cube\n")
-        sys.stderr.write("Usage:\n")
+        sys.stderr.write("\nUsage:\n")
         sys.stderr.write("  CubeMX2Makefile.py <STM32CubeMX \"Toolchain Folder Location\">\n")
         sys.exit(C2M_ERR_INVALID_COMMANDLINE)
 
@@ -56,8 +56,8 @@ def main():
         sys.exit(C2M_ERR_INVALID_COMMANDLINE)
 
     proj_name = os.path.splitext(os.path.basename(proj_folder_path))[0]
-    ac6_project_path = os.path.join(proj_folder_path, 'SW4STM32', '{} Configuration'.format(proj_name), '.project')
-    ac6_cproject_path = os.path.join(proj_folder_path, 'SW4STM32', '{} Configuration'.format(proj_name), '.cproject')
+    ac6_project_path = os.path.join(proj_folder_path, 'SW4STM32', proj_name, '.project')
+    ac6_cproject_path = os.path.join(proj_folder_path, 'SW4STM32', proj_name, '.cproject')
     if not (os.path.isfile(ac6_project_path) and os.path.isfile(ac6_cproject_path)):
         sys.stderr.write("SW4STM32 project not found, use STM32CubeMX to generate a SW4STM32 project first\n")
         sys.exit(C2M_ERR_NO_PROJECT)
@@ -167,7 +167,7 @@ def main():
     ld_script_subst = 'LDSCRIPT = {}'.format(ld_script_name)
 
     # Copy link script to top level so that user can discard SW4STM32 folder
-    src_path = os.path.join(proj_folder_path, 'SW4STM32', '{} Configuration'.format(proj_name), ld_script_name)
+    src_path = os.path.join(proj_folder_path, 'SW4STM32', proj_name, ld_script_name)
     dst_path = os.path.join(proj_folder_path, ld_script_name)
     shutil.copyfile(src_path, dst_path)
     sys.stdout.write("File created: {}\n".format(dst_path))
@@ -186,7 +186,7 @@ def main():
 
     makefile_path = os.path.join(proj_folder_path, 'Makefile')
     try:
-        with open(makefile_path, 'w') as f:
+        with open(makefile_path, 'wb') as f:
             f.write(makefile_str)
     except EnvironmentError as e:
         sys.stderr.write("Unable to write Makefile: {}. Error: {}\n".format(makefile_path, str(e)))
