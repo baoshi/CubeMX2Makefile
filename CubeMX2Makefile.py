@@ -44,7 +44,7 @@ def main():
     app_folder_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     template_file_path = os.path.join(app_folder_path, 'CubeMX2Makefile.tpl')
     try:
-        with open(template_file_path, 'rb') as f:
+        with open(template_file_path, 'r') as f:
             makefile_template = string.Template(f.read())
     except EnvironmentError as e:
         sys.stderr.write("Unable to read template file: {}. Error: {}".format(template_file_path, str(e)))
