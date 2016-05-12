@@ -64,69 +64,70 @@ def main():
         sys.stderr.write("SW4STM32 project not found, use STM32CubeMX to generate a SW4STM32 project first\n")
         sys.exit(C2M_ERR_NO_PROJECT)
 
-    c_sources_subst = 'C_SOURCES ='
-    asm_sources_subst = 'ASM_SOURCES ='
-    as_includes_subst = 'AS_INCLUDES ='
-    c_includes_subst = 'C_INCLUDES ='
-    path2 = ''
-    path2_stored_as = ''
-    first_as = True
-    path2_stored_c = ''
-    first_c = True
-    path2_split = ''
+
+    ctx = []
+
+    c_set = {}
+    c_set['source_endswith'] = '.c'
+    c_set['source_subst'] = 'C_SOURCES ='
+    c_set['inc_endswith'] = '.h'
+    c_set['inc_subst'] = 'C_INCLUDES ='
+    c_set['first'] = True
+    c_set['relpath_stored'] = ''
+    ctx.append(c_set)
+
+    asm_set = {}
+    asm_set['source_endswith'] = '.s'
+    asm_set['source_subst'] = 'ASM_SOURCES ='
+    asm_set['inc_endswith'] = '.inc'
+    asm_set['inc_subst'] = 'AS_INCLUDES ='
+    asm_set['first'] = True
+    asm_set['relpath_stored'] = ''
+    ctx.append(asm_set)
 
     for path, dirs, files in os.walk(proj_folder_path):
         for file in files:
-            if file.endswith('.c'):
-                c_sources_subst += ' \\\n  '
-                path2 = os.path.relpath(path,proj_folder_path)
-                path2_split = path2.split('\\')
-                for path2_data in path2_split:
-                    if path2_data == path2_split[0]:
-                        c_sources_subst += path2_data
-                    else:
-                        c_sources_subst += '/' + path2_data
-                c_sources_subst += '/' + file
-            elif file.endswith('.s'):
-                asm_sources_subst += ' \\\n  '
-                path2 = os.path.relpath(path,proj_folder_path)
-                path2_split = path2.split('\\')
-                for path2_data in path2_split:
-                    if path2_data == path2_split[0]:
-                        asm_sources_subst += path2_data
-                    else:
-                        asm_sources_subst += '/' + path2_data
-                asm_sources_subst += '/' + file
-            elif file.endswith('.inc'):
-                path2 = os.path.relpath(path,proj_folder_path)
-                if path2 != path2_stored_as:
-                    path2_stored_as = path2
-                    if first_as:
-                        first_as = False
-                        as_includes_subst += ' -I'
-                    else:
-                        as_includes_subst += '\nAS_INCLUDES += -I'
-                    path2_split = path2.split('\\')
-                    for path2_data in path2_split:
-                        if path2_data == path2_split[0]:
-                            as_includes_subst += path2_data
+            for s in ctx:
+
+                if file.endswith(s['source_endswith']):
+                    s['source_subst'] += ' \\\n  '
+                    relpath = os.path.relpath(path,proj_folder_path)
+
+                    #Split Windows style paths into tokens
+                    #Unix style path emit a single token
+                    relpath_split = relpath.split('\\')
+                    for path_tok in relpath_split:
+                        #Last token does not have a trailing slash
+                        if path_tok == relpath_split[0]:
+                            s['source_subst'] += path_tok
                         else:
-                            as_includes_subst += '/' + path2_data                
-            elif file.endswith('.h'):
-                path2 = os.path.relpath(path,proj_folder_path)
-                if path2 != path2_stored_c:
-                    path2_stored_c = path2
-                    if first_c:
-                        first_c = False
-                        c_includes_subst += ' -I'
-                    else:
-                        c_includes_subst += '\nC_INCLUDES += -I'
-                    path2_split = path2.split('\\')
-                    for path2_data in path2_split:
-                        if path2_data == path2_split[0]:
-                            c_includes_subst += path2_data
+                            s['source_subst'] += '/' + path_tok
+                    s['source_subst'] += '/' + file
+
+                if file.endswith(s['inc_endswith']):
+                    relpath = os.path.relpath(path,proj_folder_path)
+
+                    #only include a path once
+                    if relpath != s['relpath_stored']:
+                        s['relpath_stored'] = relpath
+
+                        #If this is the first include, we already have the 'C_INCLUDES ='
+                        if s['first']:
+                            s['first'] = False
+                            s['inc_subst'] += ' -I'
                         else:
-                            c_includes_subst += '/' + path2_data
+                            s['inc_subst'] += '\nC_INCLUDES += -I'
+
+
+                        #Split Windows style paths into tokens
+                        #Unix style path emit a single token
+                        relpath_split = relpath.split('\\')
+                        for path_tok in relpath_split:
+                            #Last token does not have a trailing slash
+                            if path_tok == relpath_split[0]:
+                                s['inc_subst'] += path_tok
+                            else:
+                                s['inc_subst'] += '/' + path_tok         
                     
     # .cproject file
     try:
@@ -178,12 +179,12 @@ def main():
         TARGET = proj_name,
         MCU = cflags_subst,
         LDMCU = ld_subst,
-        C_SOURCES = c_sources_subst,
-        ASM_SOURCES = asm_sources_subst,
+        C_SOURCES = c_set['source_subst'],
+        ASM_SOURCES = asm_set['source_subst'],
         AS_DEFS = as_defs_subst,
-        AS_INCLUDES = as_includes_subst,
+        AS_INCLUDES = asm_set['inc_subst'],
         C_DEFS = c_defs_subst,
-        C_INCLUDES = c_includes_subst,
+        C_INCLUDES = c_set['inc_subst'],
         LDSCRIPT = ld_script_subst)
 
     makefile_path = os.path.join(proj_folder_path, 'Makefile')
