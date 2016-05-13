@@ -14,4 +14,9 @@ ST has some upper/lower case issues in their source code which prevent the code 
 
 2016-02-24:
 Merge PR from rogerdahl (Better Python and fix stray '\'s)
-Update for STM32CubeMX 4.13.0 
+Update for STM32CubeMX 4.13.0
+
+2016-05-13:
+Update for STM32CubeMX 4.14.0 (ST removed all source reference in project file)
+Merge PR from mmprestine and madcowswe (Walk the project folder for source files)
+ 

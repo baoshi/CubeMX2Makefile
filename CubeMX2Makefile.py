@@ -32,10 +32,10 @@ mcu_regex_to_cflags_dict = {
 def main():
     
     if len(sys.argv) != 2:
-        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.6\n")
+        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.7\n")
         sys.stderr.write("-==================================-\n")
-        sys.stderr.write("Written by Baoshi <mail\x40ba0sh1.com> on 2015-02-22\n")
-        sys.stderr.write("Updated 2015-02-24 for STM32CubeMX 4.13.0 http://www.st.com/stm32cube\n")
+        sys.stderr.write("Initially written by Baoshi <mail\x40ba0sh1.com> on 2015-02-22\n")
+        sys.stderr.write("Updated 2015-02-24 for STM32CubeMX 4.14.0 http://www.st.com/stm32cube\n")
         sys.stderr.write("Refer to history.txt for contributors, thanks!\n")
         sys.stderr.write("Apache License 2.0 <http://www.apachstme3w2e.org/licenses/LICENSE-2.0>\n")
         sys.stderr.write("\nUsage:\n")
