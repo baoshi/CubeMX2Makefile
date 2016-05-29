@@ -24,9 +24,9 @@ mcu_regex_to_cflags_dict = {
     'STM32(F|L)0': '-mthumb -mcpu=cortex-m0',
     'STM32(F|L)1': '-mthumb -mcpu=cortex-m3',
     'STM32(F|L)2': '-mthumb -mcpu=cortex-m3',
-    'STM32(F|L)3': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp',
-    'STM32(F|L)4': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp',
-    'STM32(F|L)7': '-mthumb -mcpu=cortex-m7 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp',
+    'STM32(F|L)3': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
+    'STM32(F|L)4': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
+    'STM32(F|L)7': '-mthumb -mcpu=cortex-m7 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
 }
 
 def main():
