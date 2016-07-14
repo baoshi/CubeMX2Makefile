@@ -32,14 +32,14 @@ mcu_regex_to_cflags_dict = {
 def main():
     
     if len(sys.argv) != 2:
-        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.8\n")
+        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.9\n")
         sys.stderr.write("-==================================-\n")
         sys.stderr.write("Initially written by Baoshi <mail\x40ba0sh1.com> on 2015-02-22\n")
         sys.stderr.write("Updated 2016-06-14 for STM32CubeMX 4.15.1 http://www.st.com/stm32cube\n")
         sys.stderr.write("Refer to history.txt for contributors, thanks!\n")
         sys.stderr.write("Apache License 2.0 <http://www.apachstme3w2e.org/licenses/LICENSE-2.0>\n")
         sys.stderr.write("\nUsage:\n")
-        sys.stderr.write("  CubeMX2Makefile.py <STM32CubeMX \"Toolchain Folder Location\">\n")
+        sys.stderr.write("  CubeMX2Makefile.py <SW4STM32 project folder>\n")
         sys.exit(C2M_ERR_INVALID_COMMANDLINE)
 
     # Load template files
