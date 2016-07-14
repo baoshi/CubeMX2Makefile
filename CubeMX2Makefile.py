@@ -24,9 +24,9 @@ mcu_regex_to_cflags_dict = {
     'STM32(F|L)0': '-mthumb -mcpu=cortex-m0',
     'STM32(F|L)1': '-mthumb -mcpu=cortex-m3',
     'STM32(F|L)2': '-mthumb -mcpu=cortex-m3',
-    'STM32(F|L)3': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp',
-    'STM32(F|L)4': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp',
-    'STM32(F|L)7': '-mthumb -mcpu=cortex-m7 -mfpu=fpv4-sp-d16 -mfloat-abi=softfp',
+    'STM32(F|L)3': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
+    'STM32(F|L)4': '-mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
+    'STM32(F|L)7': '-mthumb -mcpu=cortex-m7 -mfpu=fpv4-sp-d16 -mfloat-abi=hard',
 }
 
 def main():
@@ -138,7 +138,7 @@ def main():
     root = tree.getroot()
 
     # MCU
-    mcu_node = root.find('.//toolChain[@superClass="fr.ac6.managedbuild.toolchain.gnu.cross.exe.debug"]/option[@name="Mcu"]')
+    mcu_node = root.find('.//toolChain/option[@superClass="fr.ac6.managedbuild.option.gnu.cross.mcu"][@name="Mcu"]')
     try:
         mcu_str = mcu_node.attrib.get('value')
     except Exception as e:
@@ -159,14 +159,14 @@ def main():
 
     # C symbols
     c_defs_subst = 'C_DEFS ='
-    c_def_node_list = root.findall('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler"]/option[@valueType="definedSymbols"]/listOptionValue')
+    c_def_node_list = root.findall('.//tool/option[@valueType="definedSymbols"]/listOptionValue')
     for c_def_node in c_def_node_list:
         c_def_str = c_def_node.attrib.get('value')
         if c_def_str:
             c_defs_subst += ' -D{}'.format(c_def_str)
 
     # Link script
-    ld_script_node_list = root.find('.//tool[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker"]/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
+    ld_script_node_list = root.find('.//tool/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
     try:
         ld_script_path = ld_script_node_list.attrib.get('value')
     except Exception as e:
