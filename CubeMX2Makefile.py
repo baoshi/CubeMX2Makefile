@@ -118,7 +118,6 @@ def main():
                         else:
                             s['inc_subst'] += '\nC_INCLUDES += -I'
 
-
                         #Split Windows style paths into tokens
                         #Unix style path emit a single token
                         relpath_split = relpath.split('\\')
@@ -164,8 +163,7 @@ def main():
     for c_def_node in c_def_node_list:
         c_def_str = c_def_node.attrib.get('value')
         if c_def_str:
-            c_def_str = c_def_str.replace('(', '\\(').replace(')', '\\)')
-            c_defs_subst += ' -D{}'.format(c_def_str)
+            c_defs_subst += ' -D{}'.format(re.sub(r'([()])', r'\\\1', c_def_str))
 
     # Link script
     ld_script_node = conf.find('.//tool[@name="MCU GCC Linker"]/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
