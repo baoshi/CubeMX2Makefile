@@ -54,7 +54,7 @@ ifeq ($$(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
 endif
 # Generate dependency information
-CFLAGS += -std=c99 -MD -MP -MF .dep/$$(@F).d
+CFLAGS += -std=c99 -MD -MP -MF $$(BUILD_DIR)/.dep/$$(@F).d
 
 #######################################
 # LDFLAGS
@@ -96,18 +96,18 @@ $$(BUILD_DIR)/%.bin: $$(BUILD_DIR)/%.elf | $$(BUILD_DIR)
 	$$(BIN) $$< $$@	
 	
 $$(BUILD_DIR):
-	mkdir -p $$@		
+	mkdir -p $$@/.dep
 
 #######################################
 # clean up
 #######################################
 clean:
-	-rm -fR .dep $$(BUILD_DIR)
+	-rm -fR $$(BUILD_DIR)
   
 #######################################
 # dependencies
 #######################################
--include $$(shell mkdir .dep 2>/dev/null) $$(wildcard .dep/*)
+-include $$(shell mkdir -p $$(BUILD_DIR)/.dep 2>/dev/null) $$(wildcard $$(BUILD_DIR)/.dep/*)
 
 .PHONY: clean all
 
