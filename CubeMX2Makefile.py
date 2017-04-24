@@ -32,10 +32,10 @@ mcu_regex_to_cflags_dict = {
 def main():
     
     if len(sys.argv) != 2:
-        sys.stderr.write("\nSTM32CubeMX project to Makefile V1.9\n")
+        sys.stderr.write("\nSTM32CubeMX project to Makefile V2.0\n")
         sys.stderr.write("-==================================-\n")
         sys.stderr.write("Initially written by Baoshi <mail\x40ba0sh1.com> on 2015-02-22\n")
-        sys.stderr.write("Updated 2016-06-14 for STM32CubeMX 4.15.1 http://www.st.com/stm32cube\n")
+        sys.stderr.write("Updated 2017-04-27 for STM32CubeMX 4.20.1 http://www.st.com/stm32cube\n")
         sys.stderr.write("Refer to history.txt for contributors, thanks!\n")
         sys.stderr.write("Apache License 2.0 <http://www.apachstme3w2e.org/licenses/LICENSE-2.0>\n")
         sys.stderr.write("\nUsage:\n")
@@ -135,12 +135,13 @@ def main():
     except Exception as e:
         sys.stderr.write("Unable to parse SW4STM32 .cproject file: {}. Error: {}\n".format(ac6_cproject_path, str(e)))
         sys.exit(C2M_ERR_PROJECT_FILE)
-    root = tree.getroot()
+    conf = tree.find('.//configuration[@name="Debug"]')
 
     # MCU
-    mcu_node = root.find('.//toolChain/option[@superClass="fr.ac6.managedbuild.option.gnu.cross.mcu"][@name="Mcu"]')
     try:
+        mcu_node = conf.find('.//option[@name="Mcu"]')
         mcu_str = mcu_node.attrib.get('value')
+        #sys.stdout.write("For MCU: {}\n".format(mcu_str))
     except Exception as e:
         sys.stderr.write("Unable to find target MCU node. Error: {}\n".format(str(e)))
         sys.exit(C2M_ERR_PROJECT_FILE)
@@ -159,22 +160,32 @@ def main():
 
     # C symbols
     c_defs_subst = 'C_DEFS ='
-    c_def_node_list = root.findall('.//tool/option[@valueType="definedSymbols"]/listOptionValue')
+    c_def_node_list = conf.findall('.//tool[@name="MCU GCC Compiler"]/option[@valueType="definedSymbols"]/listOptionValue')
     for c_def_node in c_def_node_list:
         c_def_str = c_def_node.attrib.get('value')
         if c_def_str:
+            c_def_str = c_def_str.replace('(', '\\(').replace(')', '\\)')
             c_defs_subst += ' -D{}'.format(c_def_str)
 
     # Link script
-    ld_script_node_list = root.find('.//tool/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
+    ld_script_node = conf.find('.//tool[@name="MCU GCC Linker"]/option[@superClass="fr.ac6.managedbuild.tool.gnu.cross.c.linker.script"]')
     try:
-        ld_script_path = ld_script_node_list.attrib.get('value')
+        ld_script_path = ld_script_node.attrib.get('value')
     except Exception as e:
         sys.stderr.write("Unable to find link script. Error: {}\n".format(str(e)))
         sys.exit(C2M_ERR_PROJECT_FILE)
     ld_script_name = os.path.basename(ld_script_path)
     ld_script_subst = 'LDSCRIPT = {}'.format(ld_script_name)
 
+# Specs
+    specs_node = conf.find('.//tool[@name="MCU GCC Linker"]/option[@superClass="gnu.c.link.option.ldflags"]')
+    try:
+        specs = specs_node.attrib.get('value')
+    except Exception as e:
+        sys.stderr.write("Unable to find link specs. Error: {}\n".format(str(e)))
+        sys.exit(C2M_ERR_PROJECT_FILE)
+    specs_subst = specs
+    
     makefile_str = makefile_template.substitute(
         TARGET = proj_name,
         MCU = cflags_subst,
@@ -185,7 +196,8 @@ def main():
         AS_INCLUDES = asm_set['inc_subst'],
         C_DEFS = c_defs_subst,
         C_INCLUDES = c_set['inc_subst'],
-        LDSCRIPT = ld_script_subst)
+        LDSCRIPT = ld_script_subst,
+        SPECS = specs_subst)
 
     makefile_path = os.path.join(proj_folder_path, 'Makefile')
     try:

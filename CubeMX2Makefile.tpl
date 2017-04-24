@@ -62,9 +62,9 @@ CFLAGS += -std=c99 -MD -MP -MF $$(BUILD_DIR)/.dep/$$(@F).d
 # link script
 $LDSCRIPT
 # libraries
-LIBS = -lc -lm -lnosys
+LIBS =
 LIBDIR =
-LDFLAGS = $LDMCU -specs=nano.specs -T$$(LDSCRIPT) $$(LIBDIR) $$(LIBS) -Wl,-Map=$$(BUILD_DIR)/$$(TARGET).map,--cref -Wl,--gc-sections
+LDFLAGS = $LDMCU $SPECS -T$$(LDSCRIPT) $$(LIBDIR) $$(LIBS) -Wl,-Map=$$(BUILD_DIR)/$$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
 all: $$(BUILD_DIR)/$$(TARGET).elf $$(BUILD_DIR)/$$(TARGET).hex $$(BUILD_DIR)/$$(TARGET).bin
